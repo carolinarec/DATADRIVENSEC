@@ -1,0 +1,64 @@
+define ROOT C:\Program Files\nxlog
+#define ROOT C:\Program Files (x86)\nxlog
+
+Moduledir %ROOT%\modules
+CacheDir %ROOT%\data
+Pidfile %ROOT%\data\nxlog.pid
+SpoolDir %ROOT%\data
+LogFile %ROOT%\data\nxlog.log
+
+<Extension _syslog>
+    Module      xm_syslog
+</Extension>
+
+<Input in>
+	Module im_msvistalog
+	ReadFromLast TRUE
+	SavePos FALSE
+
+	<QueryXML>
+		<QueryList>
+			<Query Id="0">
+				<Select Path="Microsoft-Windows-Sysmon/Operational">*</Select>
+			</Query>
+		</QueryList>
+	</QueryXML>
+	
+
+	Exec $Hostname = hostname();
+</Input>
+
+<Input in>
+	Module im_msvistalog
+	ReadFromLast TRUE
+	SavePos FALSE
+
+	<QueryXML>
+		<QueryList>
+			<Query Id="1">
+				<Select Path="WindowsUpdateClient">*</Select>
+			</Query>
+		</QueryList>
+	</QueryXML>
+	
+	# Convertimos el nombre que se envÃ­a a nombre de host corto (sin el dominio)
+	Exec $Hostname = hostname();
+</Input>
+
+
+<Output out>
+	Module om_udp
+	# Cambiar por la IP con la direcciÃ³n del Ubuntu con el Syslog remoto activado
+	Host 10.0.20.129
+	Port 514
+	<Exec>
+		$Message = string($Channel) + " - EventID " + string($EventID) + " - " + $Message;		
+
+		to_syslog_bsd();
+	</Exec>
+</Output>
+
+<Route 1>
+    Path        in => out
+</Route>
+
