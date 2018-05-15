@@ -1,1 +1,1 @@
-########################
+CONFIGURACION NXLOG SYSMON 
